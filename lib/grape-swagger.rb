@@ -21,7 +21,7 @@ module Grape
           route_path = route.route_path
           route_match = route_path.split(/^.*?#{route.route_prefix.to_s}/).last
           next unless route_match
-          route_match = route_match.match('\/([\w|-]*?)[\.\/\(]') || route_match.match('\/([\w|-]*)')
+          route_match = route_match.match('\/([\w|-]*?)[\.\/\(]') || route_match.match('\/([\w|-]*)$')
           next unless route_match
           resource = route_match.captures.first
           next if resource.empty?
@@ -402,7 +402,7 @@ module Grape
                 end
 
                 routes_array = routes.keys.map do |local_route|
-                  next if routes[local_route].all?(&:route_hidden)
+                  next if routes[local_route].map(&:route_hidden).all? { |value| value.respond_to?(:call) ? value.call : value }
 
                   url_format  = '.{format}' unless @@hide_format
 
@@ -444,7 +444,11 @@ module Grape
                 routes = target_class.combined_routes[params[:name]]
                 error!('Not Found', 404) unless routes
 
-                ops = routes.reject(&:route_hidden).group_by do |route|
+                visible_ops = routes.reject do |route|
+                  route.route_hidden.respond_to?(:call) ? route.route_hidden.call : route.route_hidden
+                end
+
+                ops = visible_ops.group_by do |route|
                   @@documentation_class.parse_path(route.route_path, api_version)
                 end
 
@@ -460,7 +464,7 @@ module Grape
 
                     models |= @@models if @@models.present?
 
-                    models |= [route.route_entity] if route.route_entity.present?
+                    models |= Array(route.route_entity) if route.route_entity.present?
 
                     models = @@documentation_class.models_with_included_presenters(models.flatten.compact)
 
@@ -479,7 +483,7 @@ module Grape
                     operation.merge!(responseMessages: http_codes) unless http_codes.empty?
 
                     if route.route_entity
-                      type = @@documentation_class.parse_entity_name(route.route_entity)
+                      type = @@documentation_class.parse_entity_name(Array(route.route_entity).first)
                       operation.merge!('type' => type)
                     end
 
