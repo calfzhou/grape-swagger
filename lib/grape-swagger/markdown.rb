@@ -17,6 +17,10 @@ module GrapeSwagger
     # Calls markdown to the configured adapter.
     ###
     def as_markdown(text)
+      puts 'as_markdown ' * 25
+      puts '@adapter', @adapter
+      puts 'markdown:', @adapter.markdown(text)
+      puts '~' * 100
       @adapter.markdown(text)
     end
   end
