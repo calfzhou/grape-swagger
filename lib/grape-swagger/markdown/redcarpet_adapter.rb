@@ -44,6 +44,7 @@ module GrapeSwagger
         @render_options = render_defaults.merge(options.fetch(:render_options, {}))
         @renderer = new_redcarpet_renderer(@render_options.delete(:highlighter)).new(@render_options)
         @markdown = Redcarpet::Markdown.new(@renderer, @extension_options)
+        puts '=' * 200
       rescue LoadError
         raise GrapeSwagger::Errors::MarkdownDependencyMissingError, 'redcarpet'
       end
