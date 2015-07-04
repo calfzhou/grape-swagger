@@ -15,6 +15,7 @@ module GrapeSwagger
     end
 
     def as_markdown(description)
+      puts 'DocMethods.as_markdown' * 10
       description && @@markdown ? @@markdown.as_markdown(strip_heredoc(description)) : description
     end
 
